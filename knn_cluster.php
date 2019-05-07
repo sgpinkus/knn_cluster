@@ -411,7 +411,7 @@ class ClusterKNN
     $module_options = array();
     $cli_options = array();
 
-    $cli_options = simple_parse_args_sane_3($argv, self::$cli_options_options );
+    $cli_options = simple_parse_args_sane($argv, self::$cli_options_options );
 
     if(isset($cli_options['valids']['help']))
     {

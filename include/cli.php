@@ -3,116 +3,53 @@
  * Various functions for getting responses / asking questions on the CLI.
  */
 
-/**
- * Parse short and long options.
- * Simple because does not know about mandatory or optional arg options.
- * this options parsing model based on getopt except for this.
- * Suks. Uses sane version.
- */
-function simple_parse_args_insane(Array $argv)
-{
-  $options = array();
-  $non_option_args = array();
-
-  for($i = 0; $i < sizeof($argv); $i++)
-  {  
-    //parse short options 
-    if(preg_match("/^-(\w+)$/", $argv[$i], $matches))
-    {
-      $short_opts = $matches[1];
-      for($j = 0; $j < strlen($short_opts); $j++)
-      { 
-
-        $opt = substr($short_opts, $j, 1);
-        $options[$opt] = true;
-
-        //if next is set AND current is last in group AND next is not an option set short opt's value.
-        if((isset($argv[$i + 1])) && (($j + 1) == strlen($short_opts)) && (preg_match("/^[^-]+$/", $argv[$i + 1], $matches)))
-        {
-          $i++;
-          $options[$opt] = $argv[$i]; 
-          //$i++; //skip over arg.
-        }
-      }
-    }
-
-    //parse long option
-    else if(preg_match("/^--(\w+)$/", $argv[$i], $matches))
-    {
-      $long_opt = $matches[1];
-      $options[$long_opt] = true;
-
-      //if next is set AND next is not an option.
-      if((isset($argv[$i + 1])) && (preg_match("/^[^-]+$/", $argv[$i + 1], $matches)))
-      {
-        $i++;  
-        $options[$long_opt] = $argv[$i];
-        //$i++; //skip over arg.
-      }    
-    }
-
-    //special arg "--" means stop processing; rest is a non option arg regardless of form.
-    else if($argv[$i] == "--")
-    {
-      if(isset($argv[$i+1]))
-      {
-        $non_option_args = array_merge($non_option_args,  array_slice($argv, $i+1));
-      }
-      break;
-    }
-
-    //the arg must be a non option arg. 
-    else
-    {
-      array_push($non_option_args, $argv[$i]);
-    }
-  }  
-    $options['non_option_args'] = $non_option_args;
-    return  $options;
-}
 
 /**
- * The UNIX pseudo convention for parsing cli args is stupid.
- * 1) -name === -n -a -m -e ??? Not in POSIX fortunately, but unfortunately no one was listening back in the day.
- * 2) Its not obvious from a args string itself whether an option is associated with a given arg! 
- *    You need some elsewhere defined data structure to tell you!
- * So this implementation supports short and long args, and groups of shorts but any argument to a option *must* be set as follows:
+ * The UNIX pseudo convention for parsing cli args is stupid. name === -n -a -m -e ?! Also it's not
+ * obvious from a stand alone args string whether an option is associated with a given arg. You need
+ * an additional schema.
+ * This implementation is ~POSIX compatible not the aforemented legacy crap. It supports short and
+ * long args, and groups of shorts but any argument to a option *must* be set as follows:
+ *
  *  <options> -> {<opt>\s+}*
  *  <opt> -> <opt_name>[=<opt_arg>]
  *  <opt_name> -> (-\w|--\w+)
  *  <opt_arg> -> \w*|".*"
  * E.g:
  *  ./prog -x -vfi --arg=value --arg2="a b c" - -- other shit -f
- * This relies only UNIX shell convention (rule?) that WS inside "" is not a word boundary and the "" are striped away by UNIX shell.
- * Any non option args are lumped into an array and returned with options.
- * Does not support checking for mandatory and optional args - it does not need to know in advance whether an option is opt/mand (!) unlike getopt.
- * Do checking for mandatory in second phase after using this.
+ *
+ * This relies only UNIX shell word boundary splitting WS inside "" is not a word boundary and the "" are striped away by UNIX shell.
+ *
+ *   - Any non option args are lumped into an array and returned with options.
+ *   - Does not support checking for mandatory and optional args - it does not need to know in advance whether an option is opt/mand (!) unlike getopt.
+ *   - Does support checking for mandatory in second phase after using this.
+ *
  * @param $argv Array the UNIX argv array.
  * @return An assoc array with keys -> opt names, values -> any associated arg. with exception entry "non_option_args" is special key with array value.
- * any opt without a arg set to logical true, while "<opt>=" set to "", which is === '<opt>=""' 
+ * any opt without a arg set to logical true, while "<opt>=" set to "", which is === '<opt>=""'
  */
-function simple_parse_args_sane(Array $argv)
+function _simple_parse_args_sane(Array $argv)
 {
   $options = array();
   $non_option_args = array();
 
   foreach($argv as $i => $opt)
-  {  
+  {
 
-    // '-' is an allowed option as long as 
+    // '-' is an allowed option as long as
     if($opt == "-")
     {
-      $options['-'] = true;  
+      $options['-'] = true;
     }
 
     //special
-    else if(preg_match("/^-=(.*)$/", $opt, $matches)) 
+    else if(preg_match("/^-=(.*)$/", $opt, $matches))
     {
       $options['-'] = $matches[1];
     }
 
     //parse short options
-    else if(preg_match("/^-([^-=][^=]*)(=?)(.*)$/", $opt, $matches)) 
+    else if(preg_match("/^-([^-=][^=]*)(=?)(.*)$/", $opt, $matches))
     {
       $short_opts = $matches[1];
       for($j = 0; $j < strlen($short_opts); $j++)
@@ -147,122 +84,43 @@ function simple_parse_args_sane(Array $argv)
       break;
     }
 
-    //the arg must be a non option arg. 
+    //the arg must be a non option arg.
     else
     {
       array_push($non_option_args, $argv[$i]);
     }
-  }  
+  }
     $options['non_option_args'] = $non_option_args;
     return  $options;
 }
 
 /**
- * Supports equivalence of long and short and valids and invalids.
- * Normally youd die if there is an arg you dont understand. 
- * Here you can check for non empty invalids and do what you like from there.
+ * Supports equivalence of long and short, and collecting valid v invalid args. Normally youd die
+ * if there is an arg you dont understand. Here you can check for non empty invalid args in returned
+ * value and do what you like from there.
+ *
  * $valid_options is an array of arrays with form:
  *  array(
- *    'cardinal' => <cardinalname> 
  *    'long' => <longname>
  *    'short' => <shortname>
  *    )
- * Only one of cardinal|long|short need be defined but trigger E_NOTICE if no cardinal.
- * You can have other stuff in the array - like help string ...
- * But cardinal should be assigned and the value is returned so named if possible.
+ * Only one of long|short need be defined. You can have other stuff in the array - like help string ...
  *
- *  return value is an array containing two arrays with form:
+ * Return value is an array containing two arrays with form:
  *   array(
  *     'valid' => array(<cardinal> => <value found> , ...)
  *     'invalid' => array(<name found> => <value found> , ...)
  *     'args'
  *     )
- * Sets all non found entries in $valid_options to null if not found, rather than not at all.
- * This was done so you dont have to use isset() if using returned value directly.
- * Any option found with no option arg is set to true.
- * No check done for conflicting args.
- * @see  simple_parse_args_sane().
- * @param argv Array argv like array of cli options.
- * @param valid_options Array describing the set of valid cli options.
- */
-function simple_parse_args_sane_2(Array $argv, Array $valid_options)
-{
-  $valids = array();
-  $invalids = array();
-  $args = array();
-
-  // Pre fill valids with null.
-  foreach($valid_options as $v)
-  {
-    if(isset($v['cardinal']))
-    {
-      $valids[$v['cardinal']] = null;
-    }
-    elseif(isset($v['long']))
-    {
-      $valids[$v['long']] = null;
-    }
-    elseif(isset($v['short']))
-    {
-      $valids[$v['short']] = null;
-    }
-    else
-    {
-      trigger_error("Found valid options array entry with no valid name!");
-    }
-  }
-
-  $options = simple_parse_args_sane($argv);
-
-  $args = $options['non_option_args'];
-  unset($options['non_option_args']);
-
-  foreach($options as $option => $value)
-  {
-    $found_valid = false;
-    foreach($valid_options as $v)
-    {
-      // Just a token attempt at validation. 
-      if(! isset($v['cardinal']))
-      {
-        trigger_error("Found valid options array entry with no cardinal name", E_USER_NOTICE);
-      }
-
-      if((isset($v['cardinal']) && $v['cardinal'] == $option) || (isset($v['long']) && ($v['long'] == $option)) || (isset($v['short']) && ($v['short'] == $option)))
-      {
-        if(isset($v['cardinal']))
-        {
-          $valids[$v['cardinal']] = $value;
-        }
-        elseif(isset($v['long']))
-        {
-          $valids[$v['cardinal']] = $value;
-        }
-        else
-        {
-          $valids[$v['short']] = $value;
-        }    
-        $found_valid = true;
-        break;
-       }
-     }
-    if(! $found_valid)
-    {
-      $invalids[$option] = $value;
-    }
-   }
-  return array('valids' => $valids, 'invalids' => $invalids, 'args' => $args);
-}
-
-/**
- * Same as simple_parse_args_sane_2() except no cardianl option, and additional fill option. Use this.
+ *
+ * Any option found with no option arg is set to true. No check done for conflicting args.
  * @param argv Array argv like array of cli options.
  * @param valid_option_spec Array describing the set of valid cli options.
  * @param fill boolean sets all non found entries in $valid_options to null if not found, rather than not at all.
  *    so you dont have to use isset() if using returned value directly.
  * @see simple_parse_args_sane_2().
  */
-function simple_parse_args_sane_3(Array $argv, Array $valid_options, $fill = false)
+function simple_parse_args_sane(Array $argv, Array $valid_options, $fill = false)
 {
   $valids = array();
   $invalids = array();
@@ -274,7 +132,7 @@ function simple_parse_args_sane_3(Array $argv, Array $valid_options, $fill = fal
     $valids = array_fill_keys(array_keys($valid_options), null);
   }
 
-  $options = simple_parse_args_sane($argv);
+  $options = _simple_parse_args_sane($argv);
 
   $args = $options['non_option_args'];
   unset($options['non_option_args']);
@@ -283,7 +141,7 @@ function simple_parse_args_sane_3(Array $argv, Array $valid_options, $fill = fal
   {
     $found_valid = false;
     foreach($valid_options as $valid_option_name => $valid_option_spec)
-    {  
+    {
       $short_names = array();
       $long_names = array();
       if(isset($valid_option_spec['short']))
@@ -380,7 +238,7 @@ function select(Array $options, $msg = "", $loop = false, $multiple = false)
     return $response;
   }
 
-  return null; 
+  return null;
 }
 
 /**
@@ -406,8 +264,8 @@ function select_multiple(Array $options, $msg = "", $loop = false)
     print "$i) $o\n";
   }
 
-  // Read a line terminated line. 
-  $response = trim(fread($stdin, 1024));  
+  // Read a line terminated line.
+  $response = trim(fread($stdin, 1024));
   $pregs =  preg_split("/,\s*/", $response);
 
   foreach($options as $o_key => $o_val)
@@ -438,11 +296,11 @@ function select_multiple(Array $options, $msg = "", $loop = false)
     }
   }
 
-  fclose($stdin);  
-  return $selection; 
+  fclose($stdin);
+  return $selection;
 }
 
-/** 
+/**
  * Ask user whether they are sure.
  */
 function are_you_sure($f_in = null, $msg = "Are you sure", $loop = false)
@@ -465,4 +323,3 @@ function are_you_sure($f_in = null, $msg = "Are you sure", $loop = false)
 
   return (in_array($response, array("y", "yes")) ? true : false);
 }
-
