@@ -3,7 +3,12 @@ The script `knn_cluster` can be used for visualizing and getting basic stats on 
 
 Currently it's slow. The clustering algorithm needs to be rewritten as its `O(n^2)` rather than `O(n*log(n))` as it should be. PHP arrays are also slow which does not help. Significantly faster with [HHVM](https://docs.hhvm.com/hhvm/installation/introduction) PHP interpreter. Not recommended for data sets over 10000 data points.
 
-<img width="50%" src="/docs/plot_rcknn_k020_knn.gif" float="right">
+<table>
+  <tr>
+    <td><img src="/docs/plot_rcknn_k020_knn.gif"></td>
+    <td><img src="/docs/rules_rcknn_dns_alph1.20_smplk010_knn.gif"></td>
+  </tr>
+</table>
 
 # Requirements
 
