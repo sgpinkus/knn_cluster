@@ -1,0 +1,4 @@
+- Add more distance measures and conditions
+- Support loading complex measure and condition parameters from config.
+- Use Fast cython based knn clustering module / function that supports non Euclidian measures.
+- Better vizualization.
