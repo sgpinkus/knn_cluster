@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "knn_cluster"
+version = "0.0.2"
+authors = [
+  { email="sgpinkus@gmail.com" },
+]
+maintainers = [
+  { email="sgpinkus@gmail.com" },
+]
+description = "KNN clustering script"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+keywords = ["clustering", "knn"]
+dependencies = [
+  "matplotlib==3.9.1",
+  "numpy==2.0.1",
+  "pandas==2.2.2",
+  "pydash==8.0.3",
+]
+[project.optional-dependencies]
+gui = ["PyQt5"]
+
+[project.urls]
+Homepage = "https://github.com/sgpinkus/knn_cluster"
+Issues = "https://github.com/sgpinkus/knn_cluster/issues"
+
+[tool.setuptools]
+packages = ["knn_cluster", "knn_cluster.sample_data"]
+
+[tool.setuptools.package-dir]
+knn_cluster = "knn_cluster"
+
+

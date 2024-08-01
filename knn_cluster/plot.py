@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-import numpy as np
-import matplotlib.pyplot as plt
-from knn import KNNSearch
+import sys
 import argparse
 import json
 import importlib
 import os
 from datetime import datetime
-import subprocess
-from knn import KNNSearch
+import numpy as np
+import matplotlib.pyplot as plt
+from knn_cluster.knn import KNNSearch
 
-def main():
-  config, data, clusters, out_dir, q = load_config()
+
+def main(argv):
+  config, data, clusters, out_dir, q = load_config(argv)
   os.mkdir(out_dir)
   if(q):
     quivers(data, clusters, config, out_dir)
@@ -55,9 +55,9 @@ def quivers(data, clusters, config, out_dir):
     plt.clf()
 
 
-def load_config():
+def load_config(argv):
   parser = get_argparser()
-  args = parser.parse_args()
+  args = parser.parse_args(argv)
   with open(args.input_file, 'r', encoding='utf-8') as f: cluster_result_data = f.read().strip().split('\n')
   config, cluster_result_data = json.loads(cluster_result_data[0]), cluster_result_data[1:]
   data = load_module(config['data_file']).data
@@ -82,4 +82,4 @@ def get_argparser():
 
 
 if __name__ == '__main__':
-  main()
+  main(sys.argv[1:])

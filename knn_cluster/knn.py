@@ -1,8 +1,8 @@
 import numpy as np
 from abc import ABC, abstractmethod
 from collections import OrderedDict
-import distances
-from distances import norm2
+from . import distances
+from .distances import norm2
 
 # Faster but requires MRPT and doesn't support custom distance measure (norm2 only).
 # import mrpt
