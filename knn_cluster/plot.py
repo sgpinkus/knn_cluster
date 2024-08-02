@@ -74,7 +74,7 @@ def load_module(module_file):
 
 
 def get_argparser():
-  parser = argparse.ArgumentParser()
+  parser = argparse.ArgumentParser(prog='knn_cluster plot')
   parser.add_argument('input_file', type=str, help='output file from knn_cluster.py representing a clustering')
   parser.add_argument('-d', '--out-dir', type=str, help='output directory')
   parser.add_argument('-q', help='draw quivers', action='store_true', default=False)

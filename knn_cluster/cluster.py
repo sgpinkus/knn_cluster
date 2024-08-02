@@ -58,7 +58,7 @@ def load_config(argv):
 
 
 def get_argparser():
-  parser = argparse.ArgumentParser()
+  parser = argparse.ArgumentParser(prog='knn_cluster cluster')
   parser.add_argument('-c', '--config-file', nargs='?', type=str, default='knn_cluster.config')
   parser.add_argument('-d', '--data-file', nargs='?', type=str)
   parser.add_argument('-j', type=int, help='A clustering will be output for j to k')

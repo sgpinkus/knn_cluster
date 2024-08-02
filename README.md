@@ -3,7 +3,8 @@
 
 # INSTALLATION
 
-    python -m pip install git@github.com:sgpinkus/knn_cluster.git
+    python -m pip install git+https://github.com/sgpinkus/knn_cluster
+
 
 # USAGE
 See options:

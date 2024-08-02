@@ -6,10 +6,10 @@ build-backend = "setuptools.build_meta"
 name = "knn_cluster"
 version = "0.0.2"
 authors = [
-  { email="sgpinkus@gmail.com" },
+  { name="Sam Pinkus", email="sgpinkus@gmail.com" },
 ]
 maintainers = [
-  { email="sgpinkus@gmail.com" },
+  { name="Sam Pinkus", email="sgpinkus@gmail.com" },
 ]
 description = "KNN clustering script"
 readme = "README.md"
