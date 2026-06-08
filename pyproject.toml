@@ -21,10 +21,10 @@ classifiers = [
 ]
 keywords = ["clustering", "knn"]
 dependencies = [
-  "matplotlib==3.9.1",
-  "numpy==2.0.1",
-  "pandas==2.2.2",
-  "pydash==8.0.3",
+  "numpy~=2.0",
+  "pandas~=2.2",
+  "matplotlib~=3.9",
+  "pydash~=8.0",
 ]
 [project.optional-dependencies]
 gui = ["PyQt5"]
@@ -38,5 +38,3 @@ packages = ["knn_cluster", "knn_cluster.sample_data"]
 
 [tool.setuptools.package-dir]
 knn_cluster = "knn_cluster"
-
-
